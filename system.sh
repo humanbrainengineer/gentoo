@@ -130,7 +130,10 @@ s1:12345:respawn:/sbin/agetty 9600 ttyS1 vt100
 25，OK
 # reboot 
 
+26，USE ： /usr/portage/profiles/use.desc 
 
+27，bianyi file：  /etc/portage/make.conf 
+28，      /usr/portage/package.use/iputils
 
 
 

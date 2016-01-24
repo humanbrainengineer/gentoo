@@ -12,9 +12,11 @@ http://mirrors.163.com/gentoo/releases/amd64
 
 3,set the root pw.
 # passwd   
-# /etc/init.d/sshd start   
 # useradd -m -G users ucb
 # passwd ucb
+3.5 boot the ssh server
+# /etc/init.d/sshd start   
+
 
 4，XShell
 
@@ -75,6 +77,7 @@ MAKEOPTS="-j9"
 
 12，Switch to the new system and update the environment variable
 # chroot /mnt/gentoo /bin/bash    //chroot to new system
+# env-update
 # source /etc/profile            //exec new profile env
 # export PS1="(chroot) $PS1"    // Update terminal command prompt
 13，update the Portage tree
@@ -82,8 +85,16 @@ MAKEOPTS="-j9"
 14，reset system profile
 # eselect profile list  
 # eselect profile set 3 
+
 15，set the timezone
 # cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+
+15.1 , USE  
+
+15.2 , nano -w /etc/locale.gen
+en_US.UTF-8 UTF-8
+
+locale-gen
 
 16，Compiling kernel
 # emerge gentoo-sources //install kernel sources
@@ -98,6 +109,11 @@ MAKEOPTS="-j9"
 /dev/sda2		none		swap		sw		            0 0
 /dev/sda3		/		    ext4		noatime		        0 1
 /dev/cdrom		/mnt/cdrom	auto		noauto,user	        0 0
+
+18.1  set the hostname
+   nano -w /etc/conf.d/hostname
+   HOSTNAME="ucb"
+   
 19，config the network.
 # vim /etc/conf.d/net   //content is as follows
 config_eth0="192.168.1.100 netmask 255.255.255.0 brd 192.168.1.255"
@@ -122,20 +138,30 @@ s1:12345:respawn:/sbin/agetty 9600 ttyS1 vt100
 # rc-update add vixie-cron default  
 # echo "export EDITOR='/usr/bin/vim'" >> /etc/profile  
 
+23.5 emerge dhcpcd 
+
 24，Install grub:
 # emerge sys-boot/grub  
-# grub2-install /dev/sda //install the grub2 to the MBR in SSD.
-# grub2-mkconfig -o /boot/grub/grub.cfg //Automatically generated grub.cfg configuration file
+# grub2-install /dev/sda          //install the grub2 to the MBR in SSD.
+# grub2-mkconfig -o /boot/grub/grub.cfg          //Automatically generated grub.cfg configuration file
+# eit
 
 25，OK
 # reboot 
 
-26，USE ： /usr/portage/profiles/use.desc 
-
+26，USE ： /usr/portage/profiles/use.desc          // look 15.1
+    example:   USE="bindist mmx sse sse2 X dbus pcmcia wifi usb unicode dri udev m17n-lib"
+    emerge xorg-x11
+    
 27，bianyi file：  /etc/portage/make.conf 
-28，      /usr/portage/package.use/iputils
+     
 
+28，/usr/portage/package.use/iputils
+       http://tieba.baidu.com/p/2513669438
+  
+29, https://wiki.gentoo.org/wiki/Xfce
 
+http://wenku.baidu.com/link?url=AWK-6hB_UVueRe5rfUOxJd1vO0Ss_l_i6hS2IWLV_ZVkmq3uKcY3Abw6NY8_HoyQAyWchAHVRaYogbw6wvT4ShGEV61FdRRpTCl-KUrTIFm
 
 
 

@@ -148,6 +148,14 @@ s1:12345:respawn:/sbin/agetty 9600 ttyS1 vt100
 
 25，OK
 # reboot 
+# ===============================================================================
+# ===============================================================================
+# ===============================================================================
+
+
+
+
+
 
 26，USE ： /usr/portage/profiles/use.desc          // look 15.1
     example:   USE="bindist mmx sse sse2 X dbus pcmcia wifi usb unicode dri udev m17n-lib"
@@ -164,6 +172,9 @@ s1:12345:respawn:/sbin/agetty 9600 ttyS1 vt100
 http://wenku.baidu.com/link?url=AWK-6hB_UVueRe5rfUOxJd1vO0Ss_l_i6hS2IWLV_ZVkmq3uKcY3Abw6NY8_HoyQAyWchAHVRaYogbw6wvT4ShGEV61FdRRpTCl-KUrTIFm
 
 
-
-
+30，config gentoo netcard.(eth0 is your network card's name)
+# cd /etc/init.d
+# ln -s net.lo net.eth0
+# /etc/init.d/net.eth start
+# /etc/init.d/net.eth stop
 

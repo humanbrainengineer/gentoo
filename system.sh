@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# gentoo is 20160121.
 0，Get the liveCD from the 163 mirrors
 http://mirrors.163.com/gentoo/releases/amd64
 1, gentooo dopcmcia

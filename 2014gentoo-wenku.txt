@@ -1,0 +1,114 @@
+2014年版本的gentoo系统安装
+测试环境
+CPU:E-5200_内存:1G_硬盘:10G
+1，获取安装文件liveCD,刻成光盘或者U盘安装。
+http://mirrors.163.com/gentoo/releases/x86/current-iso/install-x86-minimal-20140211.iso
+2，配置网络
+启动liveCD系统之后，配置网络
+# ifconig    //查看网络配置信息，并记住网卡名称
+# ifconfig eth0 192.168.1.100/24 //设置静态ip和子网掩码
+# route add default gw 192.168.1.1 //设置网关地址
+# echo "nameserver 202.96.128.86" >> /etc/resolv.conf //设置DNS
+# ping www.qq.com //测试网络是否能通
+3，设置密码并且开启SSH服务
+#passwd  //设置root密码
+# /etc/init.d/sshd start   //启动ssh服务
+4，用XShell工具连接终端
+连接步骤省略
+5，划分磁盘
+# fdisk -l //查看磁盘信息
+# fdisk /dev/sda //磁盘分区操作开始
+sda1分区: n,p,1,回车,+200M
+sda2分区: n,p,2,回车,+2048M （内存2倍）
+sda3分区: n,p,3,回车,回车   （剩余容量）
+设置sda1分区为boot启动分区：a,1
+设置sda2分区为swap分区格式: t,2,82
+最后按w写入分区信息表保存
+磁盘最终分区结果
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1   *        2048      411647      204800   83  Linux
+/dev/sda2          411648     4605951     2097152   82  Linux swap / Solaris
+/dev/sda3         4605952    20971519     8182784   83  Linux
+# partprobe //重新获取分区表
+6，格式化分区
+# mkfs.ext2 /dev/sda1
+# mkfs.ext4 /dev/sda3
+# mkswap /dev/sda2   //格式化swap分区
+# swapon /dev/sda2   //激活swap分区
+7，创建系统临时挂载点
+# mount /dev/sda3 /mnt/gentoo   
+# mkdir /mnt/gentoo/boot
+# mount /dev/sda1 /mnt/gentoo/boot 
+8，下载所需安装包
+# cd /mnt/gentoo //进入临时挂载点目录
+# wget http://mirrors.163.com/gentoo/releases/x86/current-iso/stage3-i486-20140211.tar.bz2 //下载stage3压缩包
+# wget http://mirrors.163.com/gentoo/snapshots/portage-20140213.tar.bz2 //下载protage压缩包
+# tar -xjf stage3-i486-20140211.tar.bz2 //解压stage3压缩包
+# tar -xjf portage-20140213.tar.bz2 -C /mnt/gentoo/usr //解压portage压缩包，并解压到usr/指定目录
+9，配置编的选项
+# vi /mnt/gentoo/etc/portage/make.conf
+只要内容包含以下简单的3个变量
+CFLAGS="-O2 -march=i686 -pipe"
+CXXFLAGS="${CFLAGS}"                 
+MAKEOPTS="-j2"
+10，配置镜象站点
+# mirrorselect -i -o >> /mnt/gentoo/etc/portage/make.conf  //会开启纯文字图形化界面选择离你服务器最近的源站点
+# mirrorselect -i -r -o >> /mnt/gentoo/etc/portage/make.conf //同上
+9，挂载系统所需特殊分区
+# mount -t proc none /mnt/gentoo/proc   //挂载proc特殊分区
+# mount --rbind /sys /mnt/gentoo/sys    //挂载sys特殊分区
+# mount --rbind /dev /mnt/gentoo/dev    //挂载dev特殊分区
+11，拷贝DNS设置到系统中
+# cp -L /etc/resolv.conf /mnt/gentoo/etc/
+12，切换新系统并且更新环境变量
+# chroot /mnt/gentoo /bin/bash //chroot到新系统
+# env-update //更新环境变量
+# source /etc/profile  //执行新的profile环境
+# export PS1="(chroot) $PS1" //更新终端命令提示符
+13，更新Portage树
+# emerge --sync
+14，重新定义系统profile
+# eselect profile list //查看当前profile列表
+# eselect profile set 2  //我们这里不安装桌面 直接选择2或者第9 
+15，设置时区
+# cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+16，编译内核
+# emerge gentoo-sources //安装内核源码
+# emerge genkernel //安装自动配置工具
+# genkernel all   //自动编译
+# ls /boot/kernel* /boot/initramfs* //编译完成查看生成的内核和initrd的名字
+17，安装vim
+# emerge vim
+18，配置系统fstab，最终内容如下
+/dev/sda1		/boot		ext2		defaults,noatime	0 2
+/dev/sda2		none		swap		sw		            0 0
+/dev/sda3		/		    ext3		noatime		        0 1
+/dev/cdrom		/mnt/cdrom	auto		noauto,user	        0 0
+19，配制网络
+# vim /etc/conf.d/net   //内容如下
+config_eth0="192.168.1.100 netmask 255.255.255.0 brd 192.168.1.255"
+route_eth0="default via 192.168.1.1"
+# ln -s /etc/init.d/net.lo /etc/init.d/net.eth0  //软连接到开机启动文件
+20，开机加载eth0网卡端口
+# rc-update add net.eth0 default
+21，配置SSH服务开机启动
+# rc-update add sshd dafault
+22，串口控制台环境配置
+# vim /etc/inittab //内容如下
+s0:12345:respawn:/sbin/agetty 9600 ttyS0 vt100
+s1:12345:respawn:/sbin/agetty 9600 ttyS1 vt100
+22 ,设置新系统的root密码
+# passwd root
+23,安装一些常用服务，跳过这一步可以放在日后安装
+# emerge syslog-ng  //系统日志管理
+# rc-update add syslog-ng default  //设置开机启动
+# emerge logrotate //日志格式化工具
+# emerge vixie-cron //定时计划服务
+# rc-update add vixie-cron default //设置开机启动
+# echo "export EDITOR='/usr/bin/vim'" >> /etc/profile //设置crontab默认编辑器
+24，配置GRUB2引导程序
+# emerge sys-boot/grub //安装grub2工具注意新版本是2哦
+# grub2-install /dev/sda //把grub2引导安装在硬盘MBR里
+# grub2-mkconfig -o /boot/grub/grub.cfg //自动生成grub.cfg配置文件
+25，启动系统或者关机，到此结束谢谢！
+# reboot 

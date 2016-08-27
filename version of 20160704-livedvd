@@ -107,7 +107,7 @@ Now that Xfce is now installed, we'll configure it to be the default desktop env
 
 #user $echo "exec startxfce4" > ~/.xinitrc
  
- 
+#user $startx
  ------------------------------------------
  3 part：                   http://blog.chinaunix.net/uid-26880392-id-3178409.html
    

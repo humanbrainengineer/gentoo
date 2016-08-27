@@ -83,6 +83,25 @@
  
  https://wiki.gentoo.org/wiki/Xfce/Guide#Installation
  
+ Emerge
+Now that the USE variables have been set in /etc/portage/make.conf, it is time to install Xfce.
+
+#root #emerge --ask xfce-base/xfce4-meta
+If desired add regular user(s) to the cdrom, cdrw, and usb groups, so that they can mount and use devices such as cameras, optical drives, and USB sticks.
+
+root #for x in cdrom cdrw usb ; do gpasswd -a username $x ; done
+Update the system's environment variables:
+
+#root #env-update && source /etc/profile
+A graphical terminal will be needed to continue working in the new desktop environment. The x11-terms/xfce4-terminal package is a good choice; it is made specifically for Xfce. Install Terminal as shown:
+
+#root #emerge --ask x11-terms/xfce4-terminal
+Configuration
+Starting Xfce
+Now that Xfce is now installed, we'll configure it to be the default desktop environment when we issue the startx command. Exit your root shell and log on as a regular user.
+
+#user $echo "exec startxfce4" > ~/.xinitrc
+ 
  
  ------------------------------------------
  3 part：                   http://blog.chinaunix.net/uid-26880392-id-3178409.html

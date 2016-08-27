@@ -1,5 +1,10 @@
 //Spent a 5 hours to install.  -----------https://www.youtube.com/watch?v=NTeDepdX9YY
 
+//It need 2 file:
+1--livedvd      --store in the IODD
+2--stage3-amd64-20160825.tar.bz2 
+
+
     1  fdisk
     2  fdisk /dev/sdb
     3  mkfs.ext4 /dev/sdb1
@@ -115,8 +120,8 @@ Li_qun ~ # echo 'MAKEOPTS="-j2"' >> /etc/make.conf
 查看当前使用的USE标记并启用或禁用一些
 
 -------------------------------------------------------
-
-4 part----It is OK. 
+                           http://blog.csdn.net/zhuyingqingfen/article/details/7830624
+4 part: ----It is OK. 
 cd /usr/portage/dev-util/geany 
 emerge geany-1.28.ebulid
 

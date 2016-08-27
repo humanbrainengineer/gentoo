@@ -1,0 +1,319 @@
+http://s000.tinyupload.com/index.php?file_id=71922803227942376173
+----------------- --------------- --------- ------
+
+Gentoo fresh installation through Virtualbox and livecd.
+
+Introduction:
+Gentoo are very customizable distro compared to others such as ubuntu. You can go easymode and use ubuntu cause ubuntu is for people that dont know how to use or install gentoo. Gentoo is totally free from 3rd party application or commercial.
+
+Note:
+You better stick with Gentoo handbook until you know what you doing.
+Learn from mistakes. Do it again until you familiar with your basic setting.
+
+Part 1: Partitioning the HDD (This Virtual HDD is 40gb as example and we will be using gparted)
+
+fdisk -l				View HDD details
+parted -a optimal /dev/sda	Configuring HDD
+mklabel gpt			Make label for HDD
+unit Mib				This will set metric unit
+mkpart primary 1 3		Creating grub partition (1 to 3 is HDD block unit count or 'size')
+name 1 grub			Name it to 'grub'
+set 1 bios_grub on		Enable the grub
+mkpart primary 3 131		Creating boot partition (3 to 131 is HDD block unit count or 'size')
+name 2 boot			Name it to 'boot'
+mkpart primary 131 2179		Creating swap partition (131 to 2179 is HDD block unit count or 'size')
+name 3 swap			Swap should be more than 1gb. We use 2gb (2048) as example
+mkpart primary 2179 40000	Creating root partition (2179 to 20000 is HDD block unit count or 'size')
+name 4 rootfs			Name it to 'rootfs'
+set 2 boot on			Enable the boot
+quit				Quit gparted
+
+
+Part 2: File System and mount (You can use any filesystem, we just do it simple)
+
+mkfs.vfat /dev/sda1
+mkfs.ext2 -L "boot" /dev/sda2
+mkswap -L "swap" /dev/sda3
+swapon /dev/sda3
+free -m
+mkfs.ext4 -L "rootfs" /dev/sda4
+
+mount /dev/sda4 /mnt/gentoo		Root is on /dev/sda4
+mkdir /mnt/gentoo/boot			Create boot directory
+mount /dev/sda2 /mnt/gentoo/boot		Mounting boot partition
+
+
+Part 3: Set the clock and downloading the stage tarball
+
+date MMDDhhmmYYYY			Format is month - day - hour - minutes - year
+
+cd /mnt/gentoo				Go into root directory
+ping -c 3 gentoo.org			Ping the address. I assume you got ur internet running or you will
+					need to figure it out by using 'ifconfig' or 'net-setup'.
+links www.gentoo.org/main/en/mirror.xml	Go to website and choose current stage 3 and download
+tar xvjpf 'stage3' --xattrs			Untar the compressed tarball
+
+
+Part 4: Configuring the make.conf
+
+nano -w /mnt/gentoo/etc/portage/make.conf		Open the make.conf and edit few things below
+CFLAGS="-march=native -02 -pipe"		March native will utilize CPU architecture
+MAKEOPTS="-j4"					Set the number of ur CPU cores plus 1 or any value
+USE="python icu bindist mmx sse sse2"		Set the basic USE flags.
+ALSA_CARDS=""					Sound Cards. (ex, hda-intel) This are not necessary because new kernel version already know your alsa cards
+VIDEO_CARDS=" "				Video Cards. (ex, nvidia) Dont put anything yet
+INPUT_DEVICES=" "				Input Devices. (ex, keyboard) Dont put anything yet
+
+Both VIDEO_CARDS and INPUT_DEVICES are better to be add after successful boot and @world merge to avoid conflict.
+
+When done, press 'Ctrl + X' to save and press 'Y'. And proceed to next step.
+
+
+Part 5: CHROOTING (Change root) 		Selecting mirrors is not necessary because it already set by default. Just do the change root (chroot).
+
+cp -L /etc/resolv.conf /mnt/gentoo/etc/
+mount -t proc proc /mnt/gentoo/proc
+mount --rbind /sys /mnt/gentoo/sys
+mount --make-rslave /mnt/gentoo/sys
+mount --rbind /dev /mnt/gentoo/dev
+mount --make-rslave /mnt/gentoo/dev
+
+chroot /mnt/gentoo /bin/bash
+source /etc/profile
+export PS1="(chroot) $PS1"
+emerge-webrsync			Or you can also 'emerge --sync' to sync all file
+
+Selecting the right profile. This are important because it will pull all lib and package dependencies depend on what you want to use. KDE, Gnome, Xfce, Plasma, Hardened all have different USE Flags and libs dependencies.
+eselect profile list			Select profile to use. We will be using desktop for example
+eselect profile set X			Set the Plasma desktop profile
+
+
+Part 6: Timezone and Localization
+
+ls /usr/share/zoneinfo				View all zone list
+ls /usr/share/zoneinfo/'ur country'			Choose country and state from list
+echo "ur country/ur state" > /etc/timezone		Save timezone info into /etc/timezone
+emerge --config sys-libs/timezone-data		Install timezone configuration
+
+nano -w /etc/locale.gen				Edit locale.gen and set to 'local'
+locale-gen					Generate locale
+eselect locale list				Select appropriate locale
+eselect locale set #				Set locale
+
+env-update && source /etc/profile && export PS1="(chroot) $PS1"		Update the environment
+
+
+Part 7: KERNEL and File system table (fstab)
+
+emerge --ask --verbose sys-kernel/gentoo-sources		This will install gentoo sources kernel
+emerge -av pciutils usbutils				Install required tool to detect pci and usb
+emerge genkernel					Install  kernel
+
+nano -w /etc/fstab		There are few things need to be configure here to map your partitions
+
+	/dev/sda2	/boot		ext2	noauto,noatime	1 2
+	/dev/sda4	/		ext4	noatime		0 1
+	/dev/sda3	none		swap	sw		0 0
+	/dev/sr0		/mnt/cdrom	iso9660	noauto,user,ro	0 0
+
+This file and drive order/names are very important so the kernel and modules can load properly and Dbus can start its process.
+sr0 are cd/dvd drive and iso9660 is its default kernel module. Adding 'user' will allow user to mount cd/dvd
+When all done, save the configuration press 'Ctrl + X' to save press 'Y'. And proceed to next step.
+
+genkernel --menuconfig all	This will open a GUI (Generated User Interface) kernel for customization
+				Add your hostname in General Setup. When you done, save it to .config
+				(by default name). Then exit. This will take a while to process.
+
+emerge -av sys-kernel/linux-firmware		Apply linux firmware
+
+
+Part 8: Hostname and DHCP
+
+nano -w /etc/conf.d/hostname			Set hostname for "localhost"
+ifconfig						View networking adapter and adapter name
+emerge --ask --noreplace net-misc/netifrc
+nano /etc/conf.d/net				Configure network adapter to use dhcp on boot. Make
+						sure adapter name is same from ifconfig
+						config_enp0s3="dhcp"
+
+cd /etc/init.d
+ln -s net.lo net.enp0s3				Prepares the adapter on boot
+ls -lsa						View (list) net.lo is redirected to net.enp0s3
+
+nano -w /etc/hosts				127.0.0.1 replace localhost
+
+
+Part 9: Set root access and hardware clock
+
+passwd password				Any password
+nano -w /etc/conf.d/hwclock			Set UTC to local
+
+
+Part 10: System tools
+
+emerge -av app-admin/syslog-ng sys-process/cronie sys-apps/mlocate	Basic app for admin
+
+rc-update add syslog-ng default
+rc-update add cronie default
+rc-update add sshd default
+emerge -av net-misc/dhcpcd
+
+emerge -av sys-apps/iproute2 sys-apps/net-tools gentoolkit			Basic network app (skip this, do it after Plasma desktop load if you need it)
+
+
+Part 11: System Boot (Grub 2)
+
+emerge -av sys-boot/grub
+grub2-install /dev/sda
+grub2-mkconfig -o /boot/grub/grub.cfg
+exit
+
+ls /mnt/gentoo
+umount /mnt/gentoo
+shutdown -P now
+
+
+By now it should be boot and make sure to remove the livecd. 
+
+Part 12: Test Booting
+
+login root 
+cd /
+rm /stage3-*.tar.bz2
+
+emerge -uvDNa world							This will pull all libs and dependencies needed for the selected profile and also update all the package. This will takes hours depends on your CPU and internet.
+									It took more than 5 hours for me. 
+
+
+EXTRAS
+
+
+Part 13: Installing Xorg.
+
+Both VIDEO_CARDS and INPUT_DEVICES will need to be configured again with the appropriate cards and devices.
+Depends on your cards, you might need to configure your kernel too because some nvidia provided driver conflicts with nouveu in kernel driver
+I will use VIDEO_CARDS="vesa intel fbdev" and INPUT_DEVICES="evdev mouse keyboard" as test, because im building this Gentoo in virtual environment.
+Add this In /etc/portage/make.conf
+
+VIDEO_CARDS="vesa intel fbdev"
+INPUT_DEVICES="evdev mouse keyboard"
+
+When done, press 'Ctrl + X' to save and press 'Y'. 
+
+emerge -av xorg-drivers							Install the video cards
+emerge -av xorg-server
+
+After its done, you might need to do emerge twm and xterm, just to test if everything are working correctly.
+
+emerge twm xterm
+
+Then do, startx
+
+If everything working as intended, you will get 3 white console. Now you can uninstall the twm and xterm.
+
+emerge --unmerge twm xterm
+
+
+Part 14: Adding Users
+
+useradd -m -G users,wheel,audio,portage,usb,video -s /bin/bash <user>
+passwd <user>
+
+
+Part 15: Installing Desktop Environment (Plasma)
+
+There are 2 main package for Plasma desktop,
+1) kde-plasma/plasma-meta						Everything in Plasma will be installed
+2) kde-plasma/plasma-desktop						Only few basic things for loading a plasma desktop
+Just choose either 1 that you need. Then do, emerge.
+
+emerge -av kde-plasma/plasma-meta
+
+You might as well want to install internet browser, file manager, and terminal emulator.
+
+emerge -av kde-apps/konsole kde-apps/konqueror kde-apps/dolphin
+
+
+Part 16: Configuring boot up and finalizing
+
+nano /etc/env.d/90xsession
+add a new line,
+XSESSION="KDE-4"
+
+When done, press 'Ctrl + X' to save and press 'Y'. 
+
+nano ~/.xinitrc
+add a new line,
+exec ck-launch-session dbus-launch --sh-syntax --exit-with-session startkde
+
+When done, press 'Ctrl + X' to save and press 'Y'. 
+
+nano /etc/conf.d/xdm
+edit the line and add with sddm,
+DISPLAYMANAGER="sddm"
+
+When done, press 'Ctrl + X' to save and press 'Y'. 
+
+Add sddm to video group,
+usermod -a -G video sddm
+
+
+/etc/init.d/dbus status							Check the dbus status
+/etc/init.d/dbus start
+rc-update add dbus default
+
+/etc/init.d/consolekit status						Check consolekit status
+/etc/init.d/consolekit start
+rc-update add consolekit default
+
+rc-update add xdm default
+/etc/init.d/xdm status
+
+env-update && source /etc/profile
+/etc/init.d/xdm start
+
+
+IF everything working and you follow this guide, it will load the Plasma login screen after you start the xdm. If it doesn't something is wrong with your step.
+Check everything back if it does. Your desktop will be flickering because it still have twm and xterm in the background, under the plasma. You can fix it by doing a reboot after login the plasma.
+
+If it working, all good. You will get the same desktop as im currently using now.
+
+
+Part 17: Installing ALSA (Advance Linux Sound Architecture), and Pulseaudio
+By default, libs and packages needed for sound to working are already pulled in when merging the Plasma desktop. We just need to enable it.
+
+/etc/init.d/alsasound status						Check for sound card status
+/etc/init.d/alsasound start
+rc-update add alsasound boot						Set alsasound to run at boot level
+alsamixer								Adjust the sound level
+speaker-test -t wav -c 2							Sound check
+
+Add USE flags "alsa" and "pulseaudio" into /etc/portage/make.conf
+emerge -av pavucontrol							Pulseaudio volume control. This are very useful application to manage your sound cards
+speaker test -t wav -c 2
+
+You should get to hear sound from speaker test. If you dont, open Pulseaudio volume control and select your sound cards and appropriate sound codec.
+Don't use "speaker-test -t wav -c 2" as a root access. Do speaker test as a normal user in another terminal. You will hear sound from the test.
+
+env-update && source /etc/profile
+
+
+Part 18: Last check and booting.
+Check everything again and tinkering around with desktop settings.
+
+To fully optimize for browsing internet (Youtube), i recommend to install Firefox and also adobe flash
+
+emerge -av firefox
+emerge -av adobe
+
+You need to mount cd/dvd rom (sr0) by yourself if you want to use the drive. Just like mounting a usb memory stick.
+
+mkdir /mnt/cdrom
+mount -t iso9660 /dev/sr0 /mnt/cdrom
+
+mkdir /mnt/usb
+mount /dev/sdb1 /mnt/usb
+
+
+Any question, post in my channel. I'll reply later.
+I will upload the "Configuring WIFI" and "Installing Wine, Winetricks, 32bit Wineprefix, including Steam" in another video.

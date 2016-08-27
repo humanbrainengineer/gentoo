@@ -37,7 +37,7 @@ w to save the config.
 # partprobe //reset the partition
 
 6，Format -- MKFS.ext
-# mkfs.ext2 /dev/sda1
+# mkfs.ext4 /dev/sda1
 # mkfs.ext4 /dev/sda3
 # mkswap /dev/sda2   
 # swapon /dev/sda2    

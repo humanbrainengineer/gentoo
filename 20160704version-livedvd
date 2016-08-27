@@ -1,0 +1,50 @@
+   1  source /etc/profile
+    2  export PS1="(chroot) $PS1"
+    3  mkdir /usr/portage
+    4  emerge-webrsync
+    5  emerge --sync
+    6  eselect profile list
+    7  eselect profile set 8
+    8  eselect profile list
+    9  ls /usr/share/zoneinfo/
+   10  ls /usr/share/zoneinfo/Asia
+   11  ls /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+   12  cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+   13  echo "Asia/Shanghai" > /etc/timezone
+   14  nano /etc/locale.gen 
+   15  locale-gen 
+   16  env-update && source /etc/profile
+   17  emerge gentoo-sources
+   18  emerge genkernel
+   19  genkernel all
+   20  hostname
+   21  nano /etc/conf.d/hostname 
+   22  nano /etc/hosts
+   23  hostname ucb
+   24  hostname 
+   25  nano /etc/fstab 
+   26  emerge dhcpcd
+   27  rc-update add dhcpcd default
+   28  emerge ssh
+   29  rc-update add sshd default
+   30  emerge syslog-ng
+   31  rc-update add syslog-ng default
+   32  emerge mlocate
+   33  emerge cronie
+   34  rc-update add cronie defualt
+   35  emerge sudo
+   36  whoami 
+   37  passwd
+   38  useradd -m -G users,cdrom,portage,cron -s /bin/bash ucb
+   39  passwd ucb
+   40  nano /etc/sudoers
+   41  emerge grub
+   42  grub-install /dev/sdb
+   43  grub-mkconfig -o /boot/grub/grub.cfg
+   44  cat /boot/grub/grub.cfg 
+   45  emerge open-vm-tools
+   46  emerge --ask --autounmask-write open-vm-tools
+   47  dispatch-conf 
+   48  emerge open-vm-tools
+   49  rc-update add vmware-tools default
+   50  history

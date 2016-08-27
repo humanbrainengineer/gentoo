@@ -184,3 +184,8 @@ source ~/.bashrc
 locale
 注：另一种系统配置方式是保留默认的C locale，同时要能够表现UTF-8字符。
 这种选择可以通过使用下述设置来实现：LC_CTYPE=zh_CN.UTF-8
+
+
+--------------------------------------------
+6 part 
+  gentoo sound ---- no solution.

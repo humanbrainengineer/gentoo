@@ -1,3 +1,31 @@
+//Spent a 5 hours to install. 
+
+    1  fdisk
+    2  fdisk /dev/sdb
+    3  mkfs.ext4 /dev/sdb1
+    4  mkfs.ext4 /dev/sdb2
+    5  mkfs.ext2 /dev/sdb4
+    6  mkswap /dev/sdb3
+    7  swapon /dev/sdb3
+    8  mount /dev/sdb1 /mnt/gentoo/
+    9  mkdir /mnt/gentoo/boot
+   10  mount /dev/sdb4 /mnt/gentoo/boot/
+   11  cd /mnt/gentoo/
+   12  ls
+   13  tar xvjpf stage3-amd64-20160825.tar.bz2 -C /mnt/gentoo/
+   14  cp -L /etc/resolv.conf /mnt/gentoo/etc/
+   15  mount -t proc /proc /mnt/gentoo/proc/
+   16  mount --rbind /sys/ /mnt/gentoo/sys
+   17  mount --rbind /dev/ /mnt/gentoo/dev
+   18  chroot /mnt/gentoo/ /bin/bash
+   19  umount -l /mnt/gentoo/dev/shm
+   20  umount -l /mnt/gentoo/dev/pts
+   21  umount -l /mnt/gentoo/boot 
+   22  umount -l /mnt/gentoo/proc 
+   23  histroy
+
+-----------------------------------------------
+
    1  source /etc/profile
     2  export PS1="(chroot) $PS1"
     3  mkdir /usr/portage
